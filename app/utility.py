@@ -8,11 +8,25 @@ import sqlite3
 import urllib.request
 import urllib.parse
 import json
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 DB_FILE = "data.db"
 db = sqlite3.connect(DB_FILE, check_same_thread=False)
 
-# data: {"key": value}
+CACHE_FILE = "cache.db"
+cache = sqlite3.connect(CACHE_FILE, check_same_thread=False)
+
+# data: {"keys", value}
+# FIRST KEY VALUE PAIR MUST BE PRIMARY KEY
+def cache_entry(table, data):
+    c = cache.cursor()
+    c.execute(f"SELECT * FROM {table} WHERE {list(data)[0]}=?", [list(data.values())[0]])
+    if c.fetchone() is None:
+        placeholder = ["?"] * len(data)
+        c.execute(f"INSERT INTO {table} {tuple(data.keys())} VALUES ({', '.join(placeholder)});", tuple(data.values()))
+
+# data: "key": value}
 def insert_query(table, data):
     c = db.cursor()
     placeholder = ["?"] * len(data)
@@ -29,23 +43,24 @@ def general_query(query_string, params=()):
     db.commit()
     return output
 
-# params: {"key": value}
-def call_api(api_name, path, params={}):
+# params: [("key", value)]
+def call_api(api_name, path, params=[]):
     match api_name:
         case "Dnd":
-            path = "https://www.dnd5eapi.co/api/2014/" + path
+            path = "https://www.dnd5eapi.co" + path
         case "Species":
-            path = "https://ecojsons.fws.gov/ecp/pullreports/catalog/species/report/species/export" + path
+            path = "https://ecos.fws.gov/ecp/pullreports/catalog/species/report/species" + path
         case "Countries":
-            path = "https://restcountries.com/v3.1/" + path
-    path += urllib.parse.urlencode(params)
+            path = "https://restcountries.com/v3.1" + path
+    path += '?' + urllib.parse.urlencode(params)
     with urllib.request.urlopen(path) as response:
         data = response.read()
-    return json.loads(data);
+    return json.loads(data)
 
-def findArea(polygon):
-    sum1 = 0
+def find_area(polygon):
     sum2 = 0
+    sum1 = 0
+    polygon.replace(" ", ",")
     set = polygon.split(",")
     pair1 = []
     pair2 = []
@@ -56,12 +71,20 @@ def findArea(polygon):
         if (len(firstpair) < 1):
             firstpair = coords.split(" ")
         else:
-            sum1 += (int(pair1[0])*int(pair2[1]))
-            sum2 += (int(pair1[1])*int(pair2[0]))
-    sum1 += (int(pair1[0])*int(firstpair[1]))
-    sum2 += (int(pair1[1])*int(firstpair[0]))
-    return (0.5 * abs(sum1-sum2))
+            sum1 += (float(pair1[0])*float(pair2[1]))
+            sum2 += (float(pair1[1])*float(pair2[0]))
+    sum1 += (float(pair1[0])*float(firstpair[1]))
+    sum2 += (float(pair1[1])*float(firstpair[0]))
+    return (int)(0.5 * abs(sum1-sum2))
 
 # insert_query("profiles", {"username": "Testing", "password": "Testing"})
 # print(general_query("SELECT * FROM profiles WHERE username=?", ["Testing"]))
-# print(call_api("DND", "equipment-categories/simple-weapons")["index"])
+# print(call_api("Dnd", "/equipment-categories/simple-weapons")["index"])
+
+# print(call_api("Species", "/export", {
+#     "format": "json",
+#     "columns": "/species@cn,sn,status,range_envelope,gn",
+#     "sort": "/species@cn asc;/species@sn asc",
+#     "filter": "/species@range_envelope is not null",
+#     "filter": "/species@status not in ('Experimental Population, Non-Essential')"
+# })["data"][0])

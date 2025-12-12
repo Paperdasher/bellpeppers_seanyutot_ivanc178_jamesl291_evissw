@@ -11,6 +11,8 @@ CREATE TABLE profiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     username TEXT UNIQUE,
     password TEXT,
+    equipped_weapon TEXT,
+    health INTEGER DEFAULT 100,
     country TEXT DEFAULT 'USA',
     balance INTEGER DEFAULT 0
 );""")
@@ -27,7 +29,7 @@ CREATE TABLE fish (
 );""")
 
 c.executescript("""
-DROP TABLE IF EXISTS entries;
+DROP TABLE IF EXISTS weapons;
 CREATE TABLE weapons (
     name TEXT,
     owner INTEGER,

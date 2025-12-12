@@ -12,7 +12,31 @@
 
 <p>Welcome, <strong>{{ current_user }}</strong>!</p>
 
+<p>Current health: <strong>{{ user_health }}</strong></p>
 <p>Current country: <strong>{{ country }}</strong></p>
 <p>Current balance: <strong>{{ balance }}</strong></p>
+
+<h3>Fish Owned</h3>
+{% if all_fish %}
+  {% for fish in all_fish %}
+    <li><strong>{{fish.common_name}}:</strong> {{fish.number_owned}}</li>
+  {% endfor %}
+{% else %}
+  <p>No fish owned</p>
+{% endif %}
+
+
+<h3>Weapons Owned</h3>
+{% if all_weapons %}
+  {% for weapons in all_weapons %}
+  <!-- Have equipped status and equip button for non-equipped weapons-->
+    {% if weapons == user_weapon %}
+      <li><strong>{{weapons.common_name}}:</strong> {{weapons.number_owned}} <button type="submit" class="btn btn-primary">Equip</button></li>
+    {% else %}
+      <li><strong>{{weapons.common_name}}:</strong> {{weapons.number_owned}}</li>
+  {% endfor %}
+{% else %}
+  <p>No weapons owned</p>
+{% endif %}
 
 {% endblock %}
