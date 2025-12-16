@@ -41,7 +41,7 @@ def getPopList():
     #print(list)
     return list
 
-def make_numbers(p):
+def makeNumbers(p):
     nums = []
     current = p
 
@@ -58,3 +58,13 @@ def getChanceList():
         list.append(make_numbers(pop));
     #print(list)
     return list
+
+def parseChanceList():
+    content = [];
+    for chances in getChanceList():
+        cstring = "";
+        i = 0
+        cstring += species_list[i] + ": " + chance + "\n"
+        i = i + 1
+        content.append(cstring)
+    return content;

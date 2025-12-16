@@ -7,6 +7,7 @@
 from flask import Flask, render_template, request, flash, url_for, redirect, session
 import sqlite3
 import utility
+import travel
 
 app = Flask(__name__)
 app.secret_key = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*"
@@ -46,6 +47,14 @@ def travel_get():
 @app.post('/travel')
 def travel_post():
     return ""
+
+@app.route('/travel')
+def index():
+    accordion_titles = getPopList()
+    accordion_contents = parseChanceList()
+    accordion_data = zip(accordion_titles, accordion_contents)
+    return render_template_string(HTML_TEMPLATE, accordion_data=accordion_data)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
