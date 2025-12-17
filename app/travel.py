@@ -99,3 +99,13 @@ def get_chance_list():
         list.append(make_numbers(pop))
 >>>>>>> b56faa36c925bfc6a66116878d45ad8af05f0797
     return list
+
+def parseChanceList():
+    content = [];
+    for chances in getChanceList():
+        cstring = "";
+        i = 0
+        cstring += species_list[i] + ": " + chance + "\n"
+        i = i + 1
+        content.append(cstring)
+    return content;
