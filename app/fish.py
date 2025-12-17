@@ -48,11 +48,18 @@ def get_fish():
     return fish
 
 @bp.get("/")
-def fish():
+def fish_get():
     chance = random.randint(1, 100)
-    if (chance > 90): # treasure chance: ~10%
-        print("treasure caught. debug console message for now")
-        return "you found treasure"
+    print(chance)
+    if (chance > 85): # treasure chance: ~15%
+        print("treasure caught. debug console message")
+        if (chance > 95):
+            return redirect(url_for("fish.catch_weapon_get"))
+        else:
+            cost = random.randint(20,100)
+            utility.general_query("UPDATE profiles SET balance = balance + ? WHERE username=?", [cost, session["username"]])
+            flash(f"You caught {cost} gold!","success")
+            return redirect(url_for('profile_get'))
     else: # call the database, then send the result to battle
         fish = get_fish()
         return redirect(url_for('battle.battle_get', fish=fish["scientific_name"]))
@@ -63,10 +70,16 @@ def fish():
 def catch_weapon_get():
     weapon = battle.get_random_weapon()
     user = utility.get_user(session["username"])
-    # Should only go into inventory; Goes directly to equipped for testing
-    utility.general_query("UPDATE profiles SET equipped_weapon=? WHERE username=?", [weapon['name'], session["username"]])
-    utility.insert_query("weapons", {"name": weapon['name'], "owner": user['id'], "durability": weapon['max_durability']})
-    utility.general_query("UPDATE weapons SET number_owned = number_owned + 1 WHERE owner=?", [user["id"]])
+    
+    # Adds to inventory but not auto equipped
+    result = utility.general_query("SELECT * FROM weapons WHERE name=? AND owner=?", [weapon['name'], user["id"]])
+
+    if len(result) != 0:
+        utility.general_query("UPDATE weapons SET number_owned=number_owned+1 WHERE name=? AND owner=?", [weapon["name"], user['id']])
+    else:
+        utility.insert_query("weapons", {"name": weapon['name'], "owner": user['id'], "durability": weapon['max_durability']})
+
+    flash(f"You caught a {weapon['name']}!", "success")
     return redirect(url_for('profile_get'))
 
 # print(get_fish())
